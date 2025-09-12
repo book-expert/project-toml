@@ -14,20 +14,17 @@ description = "A system for processing documents from PDF to text and speech, wi
 # ========================================================================
 [nats]
 url = "nats://127.0.0.1:4222"
-
 # PDF to PNG Service
 pdf_stream_name = "PDF_JOBS"
 pdf_consumer_name = "pdf-workers"
 pdf_created_subject = "pdf.created"
 pdf_object_store_bucket = "PDF_FILES"
-
 # PNG to Text Service
 png_stream_name = "PNG_PROCESSING"
 png_consumer_name = "png-text-workers"
 png_created_subject = "png.created"
 png_object_store_bucket = "PNG_FILES"
-text_object_store_bucket = "TEXT_FILES" # New bucket for processed text
-
+text_object_store_bucket = "TEXT_FILES"  # New bucket for processed text
 # Text to Speech Service
 tts_stream_name = "TTS_JOBS"
 tts_consumer_name = "tts-workers"
@@ -40,16 +37,14 @@ audio_object_store_bucket = "AUDIO_FILES"
 # These can be overridden by service-specific configurations if needed.
 # ========================================================================
 [paths]
-base_input_dir = "./test_artifacts/input"
-base_output_dir = "./test_artifacts/output"
 base_logs_dir = "/tmp/logs"
 
 # ========================================================================
 # PNG-TO-TEXT-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [png_to_text_service]
-input_dir = "./test_artifacts/png" # Relative to png-to-text-service root
-output_dir = "./test_artifacts/text" # Relative to png-to-text-service root
+input_dir = "./test_artifacts/png"  # Relative to png-to-text-service root
+output_dir = "./test_artifacts/text"  # Relative to png-to-text-service root
 workers = 8
 timeout_seconds = 300
 enable_augmentation = true
@@ -75,7 +70,7 @@ max_tokens = 8192
 
 [png_to_text_service.logging]
 level = "info"
-dir = "/tmp/logs" # Relative to png-to-text-service root
+dir = "/tmp/logs"  # Relative to png-to-text-service root
 enable_file_logging = true
 enable_console_logging = true
 
@@ -107,8 +102,8 @@ You are a technical editor preparing a raw document script for an audiobook narr
 # TTS-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [tts_service]
-model_path = "models/Llama-OuteTTS-1.0-1B-Q8_0.gguf" # Relative to tts-service root
-temperature = 0.75
+model_path = "models/outetts.bin"  # Relative to tts-service root
+temperature = 0.70
 timeout_seconds = 300
 
 # ========================================================================
