@@ -1,0 +1,117 @@
+# ========================================================================
+# GLOBAL PROJECT CONFIGURATION
+# This file serves as the single source of truth for all microservices.
+# ========================================================================
+
+[project]
+name = "unified-document-processing-system"
+version = "1.0.0"
+description = "A system for processing documents from PDF to text and speech, with AI augmentation."
+
+# ========================================================================
+# NATS JetStream Configuration
+# All NATS-related settings for all services are defined here.
+# ========================================================================
+[nats]
+url = "nats://127.0.0.1:4222"
+
+# PDF to PNG Service
+pdf_stream_name = "PDF_JOBS"
+pdf_consumer_name = "pdf-workers"
+pdf_created_subject = "pdf.created"
+pdf_object_store_bucket = "PDF_FILES"
+
+# PNG to Text Service
+png_stream_name = "PNG_PROCESSING"
+png_consumer_name = "png-text-workers"
+png_created_subject = "png.created"
+png_object_store_bucket = "PNG_FILES"
+text_object_store_bucket = "TEXT_FILES" # New bucket for processed text
+
+# Text to Speech Service
+tts_stream_name = "TTS_JOBS"
+tts_consumer_name = "tts-workers"
+text_processed_subject = "text.processed"
+audio_chunk_created_subject = "audio.chunk.created"
+audio_object_store_bucket = "AUDIO_FILES"
+
+# ========================================================================
+# Common Paths and Directories
+# These can be overridden by service-specific configurations if needed.
+# ========================================================================
+[paths]
+base_input_dir = "./test_artifacts/input"
+base_output_dir = "./test_artifacts/output"
+base_logs_dir = "/tmp/logs"
+
+# ========================================================================
+# PNG-TO-TEXT-SERVICE SPECIFIC CONFIGURATION
+# ========================================================================
+[png_to_text_service]
+input_dir = "./test_artifacts/png" # Relative to png-to-text-service root
+output_dir = "./test_artifacts/text" # Relative to png-to-text-service root
+workers = 8
+timeout_seconds = 300
+enable_augmentation = true
+skip_existing = true
+
+[png_to_text_service.tesseract]
+language = "eng+equ"
+oem = 3
+psm = 3
+dpi = 300
+timeout_seconds = 120
+
+[png_to_text_service.gemini]
+api_key_variable = "GEMINI_API_KEY"
+models = ["gemini-2.5-flash", "gemini-2.5-pro"]
+max_retries = 3
+retry_delay_seconds = 30
+timeout_seconds = 120
+temperature = 0.5
+top_k = 40
+top_p = 0.70
+max_tokens = 8192
+
+[png_to_text_service.logging]
+level = "info"
+dir = "/tmp/logs" # Relative to png-to-text-service root
+enable_file_logging = true
+enable_console_logging = true
+
+[png_to_text_service.augmentation]
+type = "commentary"
+custom_prompt = ""
+use_prompt_builder = true
+
+[png_to_text_service.prompts]
+augmentation = """
+## ROLE AND GOAL
+You are a technical editor preparing a raw document script for an audiobook narrator. Your goal is to create a clean, seamless, narration-ready script by augmenting the provided text with descriptions of its visual elements. This is an **augmentation** task, not a summarization task. Think of yourself as an accessibility narrator describing a scene for the visually impaired; you are adding the missing visual context.
+
+---
+## CRITICAL RULES
+1.  **PRESERVE PROSE:** You MUST preserve the original prose. Do not summarize or significantly rephrase the text. Your only job is to clean up OCR artifacts and add descriptions for non-textual content.
+2.  **NO HEADERS OR MARKDOWN:** The final output MUST be a single, continuous block of text. Do not use markdown, titles, or section headers.
+3.  **NO EXPLICIT REFERENCES:** When describing a visual, weave the description directly and naturally into the narrative. NEVER say "The image shows..." or "Figure 1 contains...".
+4.  **NO NARRATOR FLUFF:** Do not add conversational filler like "Welcome to the chapter" or "In this section, we will...". Stick to the source material.
+
+---
+## 3-STEP PROCESS
+1.  **Clean Artifacts:** First, remove all headers, footers, and page numbers found in the OCR text. Integrate section titles (e.g., "Introduction") smoothly as the start of a new paragraph.
+2.  **Augment with Visuals:** At the exact point where a visual element (figure, table, code block, formula, etc.) appears in the original document, insert a concise, natural-language description of its content. This is your primary task.
+3.  **Format for Narration:** Handle acronyms for the narrator. The first time an acronym appears, write the full term followed by the acronym in parentheses, like "Peripheral Component Interface (PCI)". For ALL subsequent uses, format it with periods to signal that it should be spelled out: "P. C. I.".
+"""
+
+# ========================================================================
+# TTS-SERVICE SPECIFIC CONFIGURATION
+# ========================================================================
+[tts_service]
+model_path = "models/Llama-OuteTTS-1.0-1B-Q8_0.gguf" # Relative to tts-service root
+temperature = 0.75
+timeout_seconds = 300
+
+# ========================================================================
+# CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
+# (No specific configuration needed for configurator itself, it's a library)
+# ========================================================================
