@@ -43,12 +43,6 @@ base_logs_dir = "/tmp/logs"
 # PNG-TO-TEXT-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [png_to_text_service]
-input_dir = "./test_artifacts/png"  # Relative to png-to-text-service root
-output_dir = "./test_artifacts/text"  # Relative to png-to-text-service root
-workers = 8
-timeout_seconds = 300
-enable_augmentation = true
-skip_existing = true
 
 [png_to_text_service.tesseract]
 language = "eng+equ"
