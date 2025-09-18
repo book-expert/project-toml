@@ -8,70 +8,8 @@ name = "unified-document-processing-system"
 version = "1.0.0"
 description = "A system for processing documents from PDF to text and speech, with AI augmentation."
 
-# ========================================================================
-# NATS JetStream Configuration
-# All NATS-related settings for all services are defined here.
-# ========================================================================
-[nats]
-url = "nats://127.0.0.1:4222"
-# PDF to PNG Service
-pdf_stream_name = "PDF_JOBS"
-pdf_consumer_name = "pdf-workers"
-pdf_created_subject = "pdf.created"
-pdf_object_store_bucket = "PDF_FILES"
-# PNG to Text Service
-png_stream_name = "PNG_PROCESSING"
-png_consumer_name = "png-text-workers"
-png_created_subject = "png.created"
-png_object_store_bucket = "PNG_FILES"
-text_object_store_bucket = "TEXT_FILES"  # New bucket for processed text
-# Text to Speech Service
-tts_stream_name = "TTS_JOBS"
-tts_consumer_name = "tts-workers"
-text_processed_subject = "text.processed"
-audio_chunk_created_subject = "audio.chunk.created"
-audio_object_store_bucket = "AUDIO_FILES"
-
-# ========================================================================
-# Common Paths and Directories
-# These can be overridden by service-specific configurations if needed.
-# ========================================================================
-[paths]
-base_logs_dir = "/tmp/logs"
-
-# ========================================================================
-# PNG-TO-TEXT-SERVICE SPECIFIC CONFIGURATION
-# ========================================================================
-[png_to_text_service]
-
-[png_to_text_service.tesseract]
-language = "eng+equ"
-oem = 3
-psm = 3
-dpi = 300
-timeout_seconds = 120
-
-[png_to_text_service.gemini]
-api_key_variable = "GEMINI_API_KEY"
-models = ["gemini-2.5-flash", "gemini-2.5-pro"]
-max_retries = 3
-retry_delay_seconds = 30
-timeout_seconds = 120
-temperature = 0.5
-top_k = 40
-top_p = 0.70
-max_tokens = 8192
-
-[png_to_text_service.logging]
-level = "info"
-dir = "/tmp/logs"  # Relative to png-to-text-service root
-enable_file_logging = true
-enable_console_logging = true
-
-[png_to_text_service.augmentation]
-type = "commentary"
-custom_prompt = ""
 use_prompt_builder = true
+parameters = {}
 
 [png_to_text_service.prompts]
 augmentation = """
@@ -104,3 +42,25 @@ timeout_seconds = 300
 # CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
 # (No specific configuration needed for configurator itself, it's a library)
 # ========================================================================
+
+[nats]
+url = "nats://127.0.0.1:4222"
+# PDF to PNG Service
+pdf_stream_name = "PDF_JOBS"
+pdf_consumer_name = "pdf-workers"
+pdf_created_subject = "pdf.created"
+pdf_object_store_bucket = "PDF_FILES"
+# PNG to Text Service
+png_stream_name = "PNG_PROCESSING"
+png_consumer_name = "png-text-workers"
+png_created_subject = "png.created"
+png_object_store_bucket = "PNG_FILES"
+text_object_store_bucket = "TEXT_FILES"  # New bucket for processed text
+dead_letter_subject = "dead.letter"
+text_stream_name = "TTS_JOBS"
+# Text to Speech Service
+tts_stream_name = "TTS_JOBS"
+tts_consumer_name = "tts-workers"
+text_processed_subject = "text.processed"
+audio_chunk_created_subject = "audio.chunk.created"
+audio_object_store_bucket = "AUDIO_FILES"
