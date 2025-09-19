@@ -34,8 +34,14 @@ You are a technical editor preparing a raw document script for an audiobook narr
 # TTS-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [tts_service]
-model_path = "models/outetts.bin"  # Relative to tts-service root
+model_path = "${TTS_MODEL_PATH}"
+snac_model_path = "${SNAC_MODEL_PATH}"
+seed = 10
+ngl = 8
+voice = "tara"
 temperature = 0.70
+top_p = 0.95
+repetition_penalty = 1.1
 timeout_seconds = 300
 
 # ========================================================================
