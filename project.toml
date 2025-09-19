@@ -8,6 +8,9 @@ name = "unified-document-processing-system"
 version = "1.0.0"
 description = "A system for processing documents from PDF to text and speech, with AI augmentation."
 
+[paths]
+base_logs_dir = "/tmp/logs"
+
 use_prompt_builder = true
 parameters = {}
 
