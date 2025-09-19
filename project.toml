@@ -16,6 +16,10 @@ parameters = {}
 
 [png_to_text_service.prompts]
 augmentation = """
+
+[png_to_text_service.gemini]
+api_key_variable = "GEMINI_API_KEY"
+
 ## ROLE AND GOAL
 You are a technical editor preparing a raw document script for an audiobook narrator. Your goal is to create a clean, seamless, narration-ready script by augmenting the provided text with descriptions of its visual elements. This is an **augmentation** task, not a summarization task. Think of yourself as an accessibility narrator describing a scene for the visually impaired; you are adding the missing visual context.
 
