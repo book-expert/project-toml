@@ -59,7 +59,6 @@ text_object_store_bucket = "TEXT_FILES"  # New bucket for processed text
 dead_letter_subject = "dead.letter"
 text_stream_name = "TTS_JOBS"
 # Text to Speech Service
-tts_stream_name = "TTS_JOBS"
 tts_consumer_name = "tts-workers"
 text_processed_subject = "text.processed"
 audio_chunk_created_subject = "audio.chunk.created"
