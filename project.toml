@@ -17,9 +17,6 @@ parameters = {}
 [png_to_text_service.prompts]
 augmentation = """
 
-[png_to_text_service.gemini]
-api_key_variable = "GEMINI_API_KEY"
-
 ## ROLE AND GOAL
 You are a technical editor preparing a raw document script for an audiobook narrator. Your goal is to create a clean, seamless, narration-ready script by augmenting the provided text with descriptions of its visual elements. This is an **augmentation** task, not a summarization task. Think of yourself as an accessibility narrator describing a scene for the visually impaired; you are adding the missing visual context.
 
@@ -36,6 +33,9 @@ You are a technical editor preparing a raw document script for an audiobook narr
 2.  **Augment with Visuals:** At the exact point where a visual element (figure, table, code block, formula, etc.) appears in the original document, insert a concise, natural-language description of its content. This is your primary task.
 3.  **Format for Narration:** Handle acronyms for the narrator. The first time an acronym appears, write the full term followed by the acronym in parentheses, like "Peripheral Component Interface (PCI)". For ALL subsequent uses, format it with periods to signal that it should be spelled out: "P. C. I.".
 """
+
+[png_to_text_service.gemini]
+api_key_variable = "GEMINI_API_KEY"
 
 # ========================================================================
 # TTS-SERVICE SPECIFIC CONFIGURATION
