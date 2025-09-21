@@ -67,6 +67,7 @@ output_type = "wav"
 # WAV-AGGREGATOR-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [wav_aggregator_service]
+worker_pool_size = 10
 
 # ========================================================================
 # CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
