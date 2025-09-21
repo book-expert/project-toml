@@ -67,8 +67,6 @@ output_type = "wav"
 # WAV-AGGREGATOR-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [wav_aggregator_service]
-[wav_aggregator_service.sox]
-path = "/usr/bin/sox"
 
 # ========================================================================
 # CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
