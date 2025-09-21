@@ -101,3 +101,4 @@ wav_object_store_bucket = "WAV_FILES"
 # WAV Aggregator Service
 final_audio_created_subject = "final.audio.created"
 final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
+wf_aggregator_kv_bucket = "WAV_AGGREGATOR_STATE"
