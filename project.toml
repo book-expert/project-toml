@@ -64,6 +64,13 @@ input_type = "raw"
 output_type = "wav"
 
 # ========================================================================
+# WAV-AGGREGATOR-SERVICE SPECIFIC CONFIGURATION
+# ========================================================================
+[wav_aggregator_service]
+[wav_aggregator_service.sox]
+path = "/usr/bin/sox"
+
+# ========================================================================
 # CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
 # (No specific configuration needed for configurator itself, it's a library)
 # ========================================================================
@@ -93,3 +100,6 @@ audio_processing_stream_name = "AUDIO_PROCESSING"
 audio_processing_consumer_name = "pcm-to-wav-workers"
 wav_created_subject = "wav.created"
 wav_object_store_bucket = "WAV_FILES"
+# WAV Aggregator Service
+final_audio_created_subject = "final.audio.created"
+final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
