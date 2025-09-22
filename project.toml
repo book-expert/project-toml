@@ -50,6 +50,7 @@ temperature = 0.70
 top_p = 0.95
 repetition_penalty = 1.1
 timeout_seconds = 300
+allowed_voices = ["default", "tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
 
 # ========================================================================
 # PCM-TO-WAV-SERVICE SPECIFIC CONFIGURATION
