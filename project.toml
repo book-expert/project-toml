@@ -11,11 +11,15 @@ description = "A system for processing documents from PDF to text and speech, wi
 [paths]
 base_logs_dir = "/tmp/logs"
 
-use_prompt_builder = true
-parameters = {}
+[database]
+user_database_dsn = "${USER_DATABASE_DSN}"
+
+[ui_service]
+http_address = ":8080"
+max_upload_megabytes = 64
 
 [png_to_text_service.prompts]
-augmentation = """
+commentary_base = """
 
 ## ROLE AND GOAL
 You are a technical editor preparing a raw document script for an audiobook narrator. Your goal is to create a clean, seamless, narration-ready script by augmenting the provided text with descriptions of its visual elements. This is an **augmentation** task, not a summarization task. Think of yourself as an accessibility narrator describing a scene for the visually impaired; you are adding the missing visual context.
@@ -34,8 +38,46 @@ You are a technical editor preparing a raw document script for an audiobook narr
 3.  **Format for Narration:** Handle acronyms for the narrator. The first time an acronym appears, write the full term followed by the acronym in parentheses, like "Peripheral Component Interface (PCI)". For ALL subsequent uses, format it with periods to signal that it should be spelled out: "P. C. I.".
 """
 
+summary_base = """
+
+## ROLE AND GOAL
+You craft concise previews or recaps that help a listener understand the purpose of the upcoming page. Capture the central ideas, the structure of the argument, and the outcome of any computations or examples.
+
+---
+## CRITICAL RULES
+1. Keep the summary to two or three natural sentences focused on intent and outcomes.
+2. Highlight the purpose of major visuals or data displays without restating fine-grained commentary details.
+3. Use clear prose with no markdown, bullets, or section headers.
+4. After the summary, present the original OCR text exactly once; do not paraphrase or omit content.
+
+---
+## STRUCTURE
+Open with the most important conclusion or question answered on the page. Mention secondary points or transitions that prepare the listener for what follows. Close by signalling how the listener should expect the narration to proceed (e.g., "The next section dives into..." when appropriate).
+"""
+
+[png_to_text_service.augmentation]
+use_prompt_builder = true
+parameters = {}
+
+[png_to_text_service.augmentation.defaults.commentary]
+enabled = true
+custom_additions = ""
+
+[png_to_text_service.augmentation.defaults.summary]
+enabled = false
+placement = "bottom"
+custom_additions = ""
+
 [png_to_text_service.gemini]
 api_key_variable = "GEMINI_API_KEY"
+
+[png_to_text_service.tts_defaults]
+voice = "tara"
+seed = 10
+ngl = 8
+top_p = 0.95
+repetition_penalty = 1.1
+temperature = 0.70
 
 # ========================================================================
 # TTS-SERVICE SPECIFIC CONFIGURATION
@@ -71,6 +113,19 @@ output_type = "wav"
 worker_pool_size = 10
 
 # ========================================================================
+# USER-DATABASE-SERVICE SPECIFIC CONFIGURATION
+# ========================================================================
+[user_database_service]
+listen_address = "0.0.0.0:8085"
+jwt_issuer = "book-expert-user-db"
+jwt_audience = "book-expert"
+access_token_ttl_minutes = 15
+refresh_token_ttl_hours = 720
+argon2_memory_kib = 19456
+argon2_iterations = 3
+argon2_parallelism = 1
+
+# ========================================================================
 # CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
 # (No specific configuration needed for configurator itself, it's a library)
 # ========================================================================
@@ -103,4 +158,5 @@ wav_object_store_bucket = "WAV_FILES"
 # WAV Aggregator Service
 final_audio_created_subject = "final.audio.created"
 final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
-wf_aggregator_kv_bucket = "WAV_AGGREGATOR_STATE"
+wav_consumer_name = "wav-aggregator-workers"
+wav_aggregator_kv_bucket = "WAV_AGGREGATOR_STATE"
