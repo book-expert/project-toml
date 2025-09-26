@@ -130,6 +130,15 @@ argon2_parallelism = 1
 # (No specific configuration needed for configurator itself, it's a library)
 # ========================================================================
 
+[cost_estimator_service]
+currency = "USD"
+page_block_size = 100
+base_rate_cents_per_block = 200
+default_augmentation_cents_per_block = 50
+custom_commentary_cents_per_block = 100
+custom_summary_cents_per_block = 100
+maximum_prompt_characters = 500
+
 [nats]
 url = "nats://127.0.0.1:4222"
 # PDF to PNG Service
