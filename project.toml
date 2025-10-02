@@ -24,7 +24,7 @@ required_units = [
 ]
 
 [database]
-user_database_dsn = "USER_DATABASE_DSN"
+user_database_dsn = "${USER_DATABASE_DSN}"
 
 [ui_service]
 http_address = ":8080"
@@ -81,7 +81,7 @@ placement = "bottom"
 custom_additions = ""
 
 [png_to_text_service.gemini]
-api_key_variable = "GEMINI_API_KEY"
+api_key_variable = "${GEMINI_API_KEY}"
 
 [png_to_text_service.tts_defaults]
 voice = "tara"
