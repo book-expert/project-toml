@@ -24,7 +24,7 @@ required_units = [
 ]
 
 [database]
-user_database_dsn = "${USER_DATABASE_DSN}"
+user_database_dsn = "USER_DATABASE_DSN"
 
 [ui_service]
 http_address = ":8080"
