@@ -24,7 +24,7 @@ required_units = [
 ]
 
 [database]
-user_database_dsn = "${USER_DATABASE_DSN}"
+user_database_dsn = "postgres://book_expert_user:b00k_3xp3rt@localhost:5432/book_expert_db"
 
 [ui_service]
 http_address = ":8080"
