@@ -154,30 +154,59 @@ maximum_prompt_characters = 500
 
 [nats]
 url = "nats://127.0.0.1:4222"
-# PDF to PNG Service
-pdf_stream_name = "PDF_JOBS"
-pdf_consumer_name = "pdf-workers"
-pdf_created_subject = "pdf.created"
-pdf_object_store_bucket = "PDF_FILES"
-# PNG to Text Service
+
+[pdf-to-png-service.nats]
+    streams = [
+      { name = "pdfs", subjects = ["book-expert.pdfs.created"] },
+      { name = "pngs", subjects = ["book-expert.pngs.created"] }
+    ]
+    consumers = [
+      { stream_name = "pdfs", consumer_name = "pdf-to-png-consumer", filter_subject = "book-expert.pdfs.created" }
+    ]
+    object_stores = [
+      { bucket_name = "pdf-files" },
+      { bucket_name = "png-files" }
+    ]
+
+# ------------------------------------------------------------------------
+# PNG TO TEXT SERVICE
+# Consumes: PNG images
+# Produces: Text files
+# ------------------------------------------------------------------------
 png_stream_name = "PNG_PROCESSING"
 png_consumer_name = "png-text-workers"
 png_created_subject = "png.created"
 png_object_store_bucket = "PNG_FILES"
-text_object_store_bucket = "TEXT_FILES"  # New bucket for processed text
-dead_letter_subject = "dead.letter"
 text_stream_name = "TTS_JOBS"
-# Text to Speech Service
+text_object_store_bucket = "TEXT_FILES"
+dead_letter_subject = "dead.letter"
+
+# ------------------------------------------------------------------------
+# TEXT TO SPEECH SERVICE
+# Consumes: Text files
+# Produces: Audio chunks (PCM)
+# ------------------------------------------------------------------------
+tts_stream_name = "TTS_JOBS"
 tts_consumer_name = "tts-workers"
 text_processed_subject = "text.processed"
 audio_chunk_created_subject = "audio.chunk.created"
 audio_object_store_bucket = "AUDIO_FILES"
-# PCM to WAV Service
+
+# ------------------------------------------------------------------------
+# PCM TO WAV SERVICE
+# Consumes: Audio chunks (PCM)
+# Produces: WAV files
+# ------------------------------------------------------------------------
 audio_processing_stream_name = "AUDIO_PROCESSING"
 audio_processing_consumer_name = "pcm-to-wav-workers"
 wav_created_subject = "wav.created"
 wav_object_store_bucket = "WAV_FILES"
-# WAV Aggregator Service
+
+# ------------------------------------------------------------------------
+# WAV AGGREGATOR SERVICE
+# Consumes: WAV files
+# Produces: Final aggregated audio
+# ------------------------------------------------------------------------
 final_audio_created_subject = "final.audio.created"
 final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
 wav_consumer_name = "wav-aggregator-workers"
