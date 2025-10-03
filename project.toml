@@ -168,18 +168,18 @@ url = "nats://127.0.0.1:4222"
       { bucket_name = "png-files" }
     ]
 
-# ------------------------------------------------------------------------
-# PNG TO TEXT SERVICE
-# Consumes: PNG images
-# Produces: Text files
-# ------------------------------------------------------------------------
-png_stream_name = "PNG_PROCESSING"
-png_consumer_name = "png-text-workers"
-png_created_subject = "png.created"
-png_object_store_bucket = "PNG_FILES"
-text_stream_name = "TTS_JOBS"
-text_object_store_bucket = "TEXT_FILES"
-dead_letter_subject = "dead.letter"
+[png-to-text-service.nats]
+    streams = [
+      { name = "pngs", subjects = ["book-expert.pngs.created"] },
+      { name = "texts", subjects = ["book-expert.texts.created"] }
+    ]
+    consumers = [
+      { stream_name = "pngs", consumer_name = "png-to-text-consumer", filter_subject = "book-expert.pngs.created" }
+    ]
+    object_stores = [
+      { bucket_name = "png-files" },
+      { bucket_name = "text-files" }
+    ]
 
 # ------------------------------------------------------------------------
 # TEXT TO SPEECH SERVICE
