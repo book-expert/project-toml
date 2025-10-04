@@ -34,6 +34,19 @@ Key updates:
       - `object_stores = [ { bucket_name = "WAV_FILES" }, { bucket_name = "FINAL_AUDIO_FILES" } ]`
       - `key_value = { bucket_name = "WAV_AGGREGATOR_STATE" }`
 
+## Conventions
+- Streams: lower-case, descriptive names that group related events (e.g., `pdfs`, `pngs`, `texts`, `wavs`, `finals`, `dlq`).
+- Subjects:
+  - Prefer fully qualified subjects for cross-service events: `book-expert.<domain>.<event>` (e.g., `book-expert.pngs.created`).
+  - Service-local subjects are allowed when scoping is explicit (e.g., `wav.created`, `final.audio.created`).
+  - DLQ subjects use: `book-expert.<service>.dlq` (e.g., `book-expert.wav-aggregator.dlq`).
+- Consumers: durable queue workers named `<service>-workers` with `AckExplicit` and `filter_subject` set to the consumed subject.
+- Object Stores: buckets use UPPER_SNAKE_CASE (e.g., `WAV_FILES`, `FINAL_AUDIO_FILES`). Buckets hold large binaries; events carry only keys.
+- KV Buckets: UPPER_SNAKE_CASE that reflects responsibility (e.g., `WAV_AGGREGATOR_STATE`).
+- DLQ Stream: dedicated stream `dlq` that includes one or more DLQ subjects sized for peak failure volume.
+
+For the strict implementation blueprint and validation rules, see `../docs/NATS_FOR_AGENTS.md` in the monorepo.
+
 ## Testing
 - Services should start cleanly with `PROJECT_TOML` set and create/validate streams/consumers/object stores/KV in NATS.
 - For a quick check, `curl -fsSL "$PROJECT_TOML"` should return valid TOML.
