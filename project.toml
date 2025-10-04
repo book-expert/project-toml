@@ -163,7 +163,8 @@ url = "nats://127.0.0.1:4222"
 [pdf-to-png-service.nats]
     streams = [
       { name = "pdfs", subjects = ["book-expert.pdfs.created"] },
-      { name = "pngs", subjects = ["book-expert.pngs.created"] }
+      { name = "pngs", subjects = ["book-expert.pngs.created"] },
+      { name = "dlq", subjects = ["book-expert.pdf-to-png.dlq"] }
     ]
     consumers = [
       { stream_name = "pdfs", consumer_name = "pdf-to-png-consumer", filter_subject = "book-expert.pdfs.created" }
@@ -172,6 +173,9 @@ url = "nats://127.0.0.1:4222"
       { bucket_name = "pdf-files" },
       { bucket_name = "png-files" }
     ]
+
+[pdf_to_png_service]
+dead_letter_subject = "book-expert.pdf-to-png.dlq"
 
 [png-to-text-service.nats]
     streams = [
