@@ -183,6 +183,21 @@ url = "nats://127.0.0.1:4222"
       { bucket_name = "text-files" }
     ]
 
+[wav-aggregator-service.nats]
+    streams = [
+      { name = "wavs", subjects = ["wav.created"] },
+      { name = "finals", subjects = ["final.audio.created"] },
+      { name = "dlq", subjects = ["book-expert.wav-aggregator.dlq"] }
+    ]
+    consumers = [
+      { stream_name = "wavs", consumer_name = "wav-aggregator-workers", filter_subject = "wav.created" }
+    ]
+    object_stores = [
+      { bucket_name = "WAV_FILES" },
+      { bucket_name = "FINAL_AUDIO_FILES" }
+    ]
+    key_value = { bucket_name = "WAV_AGGREGATOR_STATE" }
+
 # ------------------------------------------------------------------------
 # TEXT TO SPEECH SERVICE
 # Consumes: Text files
