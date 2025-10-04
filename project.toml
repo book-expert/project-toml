@@ -91,6 +91,9 @@ top_p = 0.95
 repetition_penalty = 1.1
 temperature = 0.70
 
+[png_to_text_service]
+dead_letter_subject = "book-expert.png-to-text.dlq"
+
 # ========================================================================
 # TTS-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
