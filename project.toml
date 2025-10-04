@@ -105,6 +105,7 @@ top_p = 0.95
 repetition_penalty = 1.1
 timeout_seconds = 300
 allowed_voices = ["default", "tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
+dead_letter_subject = "book-expert.tts.dlq"
 
 # ========================================================================
 # PCM-TO-WAV-SERVICE SPECIFIC CONFIGURATION
