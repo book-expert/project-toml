@@ -124,6 +124,7 @@ output_type = "wav"
 # ========================================================================
 [wav_aggregator_service]
 worker_pool_size = 10
+dead_letter_subject = "book-expert.wav-aggregator.dlq"
 
 # ========================================================================
 # USER-DATABASE-SERVICE SPECIFIC CONFIGURATION
