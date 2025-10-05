@@ -51,5 +51,30 @@ For the strict implementation blueprint and validation rules, see `../docs/NATS_
 - Services should start cleanly with `PROJECT_TOML` set and create/validate streams/consumers/object stores/KV in NATS.
 - For a quick check, `curl -fsSL "$PROJECT_TOML"` should return valid TOML.
 
+## Architecture Diagram
+
+```mermaid
+graph TD
+    A[project.toml] --> B[NATS Configuration]
+    A --> C[Service-Specific Configurations]
+    B --> D[Streams Configuration]
+    B --> E[Consumers Configuration]
+    B --> F[Object Stores Configuration]
+    B --> G[Key-Value Stores Configuration]
+    C --> H[pdf-to-png-service]
+    C --> I[png-to-text-service]
+    C --> J[tts-service]
+    C --> K[pcm-to-wav-service]
+    C --> L[wav-aggregator-service]
+    C --> M[ui-service]
+    C --> N[user-database-service]
+    C --> O[cost-estimator-service]
+    C --> P[book-expert-service]
+    
+    style A fill:#cde4ff,stroke:#6495ED,stroke-width:2px
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#fbf,stroke:#333,stroke-width:2px
+```
+
 ## License
 Distributed under the MIT License. See the upstream project LICENSE files where applicable.
