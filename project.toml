@@ -110,6 +110,29 @@ timeout_seconds = 300
 allowed_voices = ["default", "tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
 dead_letter_subject = "book-expert.tts.dlq"
 
+  [tts_service.nats]
+    url = "nats://127.0.0.1:4222" # Using the global NATS URL
+
+    [[tts_service.nats.streams]]
+      name = "TTS_JOBS"
+      subjects = ["text.processed"]
+
+    [[tts_service.nats.streams]]
+      name = "AUDIO_OUTPUT"
+      subjects = ["audio.chunk.created"]
+
+    [[tts_service.nats.streams]]
+      name = "DLQ"
+      subjects = ["book-expert.tts.dlq"]
+
+    [[tts_service.nats.consumers]]
+      stream_name = "TTS_JOBS"
+      consumer_name = "tts-workers"
+      filter_subject = "text.processed"
+
+    [[tts_service.nats.object_stores]]
+      bucket_name = "AUDIO_FILES"
+
 # ========================================================================
 # PCM-TO-WAV-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
@@ -207,16 +230,6 @@ dead_letter_subject = "book-expert.pdf-to-png.dlq"
     ]
     key_value = { bucket_name = "WAV_AGGREGATOR_STATE" }
 
-# ------------------------------------------------------------------------
-# TEXT TO SPEECH SERVICE
-# Consumes: Text files
-# Produces: Audio chunks (PCM)
-# ------------------------------------------------------------------------
-tts_stream_name = "TTS_JOBS"
-tts_consumer_name = "tts-workers"
-text_processed_subject = "text.processed"
-audio_chunk_created_subject = "audio.chunk.created"
-audio_object_store_bucket = "AUDIO_FILES"
 
 # ------------------------------------------------------------------------
 # PCM TO WAV SERVICE
