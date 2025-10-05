@@ -114,6 +114,8 @@ dead_letter_subject = "book-expert.tts.dlq"
 # PCM-TO-WAV-SERVICE SPECIFIC CONFIGURATION
 # ========================================================================
 [pcm_to_wav_service]
+dead_letter_subject = "book-expert.pcm-to-wav.dlq"
+
 [pcm_to_wav_service.sox]
 encoding = "signed-integer"
 bits = 16
