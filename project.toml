@@ -183,6 +183,8 @@ dead_letter_subject = "book-expert.tts.dlq"
 dead_letter_subject = "book-expert.pcm-to-wav.dlq"
 
 [pcm-to-wav-service.nats]
+    url = "nats://127.0.0.1:4222"
+
     streams = [
       { name = "WAV_FILES", subjects = ["wav.created"] }
     ]
