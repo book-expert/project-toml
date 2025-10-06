@@ -329,7 +329,6 @@ dead_letter_subject = "book-expert.wav-aggregator.dlq"
     
     # Object store buckets for file storage
     object_stores = [
-      { bucket_name = "WAV_FILES" },
       { bucket_name = "FINAL_AUDIO_FILES" }
     ]
     
