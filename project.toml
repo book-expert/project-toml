@@ -45,26 +45,51 @@ maximum_prompt_characters = 500
 # ========================================================================
 # PDF TO PNG SERVICE
 # ========================================================================
+# Role: Consumer of PDFs, Producer of PNGs
+# Consumes: book-expert.pdfs.created
+# Produces: book-expert.pngs.created
+# ========================================================================
 
 [pdf_to_png_service]
 dead_letter_subject = "book-expert.pdf-to-png.dlq"
 
-[pdf-to-png-service.nats]
+[pdf_to_png_service.nats]
+    # Streams this service interacts with
     streams = [
-      { name = "pdfs", subjects = ["book-expert.pdfs.created"] },
-      { name = "pngs", subjects = ["book-expert.pngs.created"] },
-      { name = "dlq", subjects = ["book-expert.pdf-to-png.dlq"] }
+      { name = "PDFS", subjects = ["book-expert.pdfs.created"] },
+      { name = "PNGS", subjects = ["book-expert.pngs.created"] },
+      { name = "PDF_TO_PNG_DLQ", subjects = ["book-expert.pdf-to-png.dlq"] }
     ]
+    
+    # Consumer configuration - what this service listens to
     consumers = [
-      { stream_name = "pdfs", consumer_name = "pdf-to-png-consumer", filter_subject = "book-expert.pdfs.created" }
+      { 
+        stream_name = "PDFS", 
+        consumer_name = "pdf-to-png-consumer", 
+        filter_subject = "book-expert.pdfs.created",
+        durable_name = "pdf-to-png-durable",
+        ack_policy = "explicit",
+        max_deliver = 3
+      }
     ]
+    
+    # Producer configuration - what this service publishes to
+    producers = [
+      { subject = "book-expert.pngs.created", stream = "PNGS" }
+    ]
+    
+    # Object store buckets for file storage
     object_stores = [
-      { bucket_name = "pdf-files" },
-      { bucket_name = "png-files" }
+      { bucket_name = "PDF_FILES" },
+      { bucket_name = "PNG_FILES" }
     ]
 
 # ========================================================================
-# PNG TO TEXT SERVICE
+# PNG TO TEXT SERVICE (OCR + AI Augmentation)
+# ========================================================================
+# Role: Consumer of PNGs, Producer of Texts
+# Consumes: book-expert.pngs.created
+# Produces: book-expert.texts.created
 # ========================================================================
 
 [png_to_text_service]
@@ -131,21 +156,43 @@ top_p = 0.95
 repetition_penalty = 1.1
 temperature = 0.70
 
-[png-to-text-service.nats]
+[png_to_text_service.nats]
+    # Streams this service interacts with
     streams = [
-      { name = "pngs", subjects = ["book-expert.pngs.created"] },
-      { name = "texts", subjects = ["book-expert.texts.created"] }
+      { name = "PNGS", subjects = ["book-expert.pngs.created"] },
+      { name = "TEXTS", subjects = ["book-expert.texts.created"] },
+      { name = "PNG_TO_TEXT_DLQ", subjects = ["book-expert.png-to-text.dlq"] }
     ]
+    
+    # Consumer configuration - what this service listens to
     consumers = [
-      { stream_name = "pngs", consumer_name = "png-to-text-consumer", filter_subject = "book-expert.pngs.created" }
+      { 
+        stream_name = "PNGS", 
+        consumer_name = "png-to-text-consumer", 
+        filter_subject = "book-expert.pngs.created",
+        durable_name = "png-to-text-durable",
+        ack_policy = "explicit",
+        max_deliver = 3
+      }
     ]
+    
+    # Producer configuration - what this service publishes to
+    producers = [
+      { subject = "book-expert.texts.created", stream = "TEXTS" }
+    ]
+    
+    # Object store buckets for file storage
     object_stores = [
-      { bucket_name = "png-files" },
-      { bucket_name = "text-files" }
+      { bucket_name = "PNG_FILES" },
+      { bucket_name = "TEXT_FILES" }
     ]
 
 # ========================================================================
-# TTS SERVICE
+# TTS SERVICE (Text-to-Speech)
+# ========================================================================
+# Role: Consumer of Texts, Producer of Audio Chunks (PCM)
+# Consumes: book-expert.texts.created
+# Produces: book-expert.audio.chunk.created
 # ========================================================================
 
 [tts_service]
@@ -161,22 +208,43 @@ timeout_seconds = 300
 allowed_voices = ["default", "tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
 dead_letter_subject = "book-expert.tts.dlq"
 
-[tts-service.nats]
-    url = "nats://127.0.0.1:4222"
+[tts_service.nats]
+    # Streams this service interacts with
     streams = [
-      { name = "TTS_JOBS", subjects = ["book-expert.texts.created"] },
-      { name = "AUDIO_OUTPUT", subjects = ["audio.chunk.created"] },
-      { name = "DLQ", subjects = ["book-expert.tts.dlq"] }
+      { name = "TEXTS", subjects = ["book-expert.texts.created"] },
+      { name = "AUDIO_CHUNKS", subjects = ["book-expert.audio.chunk.created"] },
+      { name = "TTS_DLQ", subjects = ["book-expert.tts.dlq"] }
     ]
+    
+    # Consumer configuration - what this service listens to
     consumers = [
-      { stream_name = "TTS_JOBS", consumer_name = "tts-workers", filter_subject = "book-expert.texts.created" }
+      { 
+        stream_name = "TEXTS", 
+        consumer_name = "tts-workers", 
+        filter_subject = "book-expert.texts.created",
+        durable_name = "tts-durable",
+        ack_policy = "explicit",
+        max_deliver = 3,
+        max_ack_pending = 100
+      }
     ]
+    
+    # Producer configuration - what this service publishes to
+    producers = [
+      { subject = "book-expert.audio.chunk.created", stream = "AUDIO_CHUNKS" }
+    ]
+    
+    # Object store buckets for file storage
     object_stores = [
       { bucket_name = "AUDIO_FILES" }
     ]
 
 # ========================================================================
-# PCM TO WAV SERVICE
+# PCM TO WAV SERVICE (Audio Format Conversion)
+# ========================================================================
+# Role: Consumer of Audio Chunks (PCM), Producer of WAV files
+# Consumes: book-expert.audio.chunk.created
+# Produces: book-expert.wav.created
 # ========================================================================
 
 [pcm_to_wav_service]
@@ -190,51 +258,86 @@ channels = 1
 input_type = "raw"
 output_type = "wav"
 
-[pcm-to-wav-service.nats]
-    url = "nats://127.0.0.1:4222"
+[pcm_to_wav_service.nats]
+    # Streams this service interacts with
     streams = [
-      { name = "WAV_CREATED", subjects = ["wav.created"] }
+      { name = "AUDIO_CHUNKS", subjects = ["book-expert.audio.chunk.created"] },
+      { name = "WAV_FILES", subjects = ["book-expert.wav.created"] },
+      { name = "PCM_TO_WAV_DLQ", subjects = ["book-expert.pcm-to-wav.dlq"] }
     ]
+    
+    # Consumer configuration - what this service listens to
     consumers = [
-      { stream_name = "AUDIO_PROCESSING", consumer_name = "pcm-to-wav-workers", filter_subject = "audio.chunk.created" }
+      { 
+        stream_name = "AUDIO_CHUNKS", 
+        consumer_name = "pcm-to-wav-workers", 
+        filter_subject = "book-expert.audio.chunk.created",
+        durable_name = "pcm-to-wav-durable",
+        ack_policy = "explicit",
+        max_deliver = 3
+      }
     ]
+    
+    # Producer configuration - what this service publishes to
+    producers = [
+      { subject = "book-expert.wav.created", stream = "WAV_FILES" }
+    ]
+    
+    # Object store buckets for file storage
     object_stores = [
       { bucket_name = "AUDIO_FILES" },
       { bucket_name = "WAV_FILES" }
     ]
 
-[pcm-to-wav-service.sox]
-encoding = "signed-integer"
-bits = 32
-rate = 24000
-channels = 1
-input_type = "raw"
-output_type = "wav"
-
 # ========================================================================
-# WAV AGGREGATOR SERVICE
+# WAV AGGREGATOR SERVICE (Final Audio Assembly)
+# ========================================================================
+# Role: Consumer of WAV files, Producer of Final Audio
+# Consumes: book-expert.wav.created
+# Produces: book-expert.final.audio.created
 # ========================================================================
 
 [wav_aggregator_service]
 worker_pool_size = 10
 dead_letter_subject = "book-expert.wav-aggregator.dlq"
 
-[wav-aggregator-service.nats]
+[wav_aggregator_service.nats]
+    # Streams this service interacts with
     streams = [
-      { name = "finals", subjects = ["final.audio.created"] },
-      { name = "dlq", subjects = ["book-expert.wav-aggregator.dlq"] }
+      { name = "WAV_FILES", subjects = ["book-expert.wav.created"] },
+      { name = "FINAL_AUDIO", subjects = ["book-expert.final.audio.created"] },
+      { name = "WAV_AGGREGATOR_DLQ", subjects = ["book-expert.wav-aggregator.dlq"] }
     ]
+    
+    # Consumer configuration - what this service listens to
     consumers = [
-      { stream_name = "wavs", consumer_name = "wav-aggregator-workers", filter_subject = "wav.created" }
+      { 
+        stream_name = "WAV_FILES", 
+        consumer_name = "wav-aggregator-workers", 
+        filter_subject = "book-expert.wav.created",
+        durable_name = "wav-aggregator-durable",
+        ack_policy = "explicit",
+        max_deliver = 3,
+        max_ack_pending = 50
+      }
     ]
+    
+    # Producer configuration - what this service publishes to
+    producers = [
+      { subject = "book-expert.final.audio.created", stream = "FINAL_AUDIO" }
+    ]
+    
+    # Object store buckets for file storage
     object_stores = [
       { bucket_name = "WAV_FILES" },
       { bucket_name = "FINAL_AUDIO_FILES" }
     ]
+    
+    # Key-value store for aggregation state management
     key_value = { bucket_name = "WAV_AGGREGATOR_STATE" }
 
 # ========================================================================
-# UI SERVICE
+# UI SERVICE (Web Interface)
 # ========================================================================
 
 [ui_service]
@@ -242,7 +345,7 @@ http_address = ":8080"
 max_upload_megabytes = 64
 
 # ========================================================================
-# USER DATABASE SERVICE
+# USER DATABASE SERVICE (Authentication & Authorization)
 # ========================================================================
 
 [user_database_service]
@@ -255,4 +358,3 @@ refresh_token_ttl_hours = 720
 argon2_memory_kib = 19456
 argon2_iterations = 3
 argon2_parallelism = 1
-
