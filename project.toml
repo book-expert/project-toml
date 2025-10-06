@@ -222,7 +222,6 @@ dead_letter_subject = "book-expert.wav-aggregator.dlq"
 
 [wav-aggregator-service.nats]
     streams = [
-      { name = "wavs", subjects = ["wav.created"] },
       { name = "finals", subjects = ["final.audio.created"] },
       { name = "dlq", subjects = ["book-expert.wav-aggregator.dlq"] }
     ]
