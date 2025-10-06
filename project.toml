@@ -179,16 +179,25 @@ dead_letter_subject = "book-expert.tts.dlq"
 # PCM TO WAV SERVICE
 # ========================================================================
 
-[pcm_to_wav_service]
+[pcm-to-wav-service]
 dead_letter_subject = "book-expert.pcm-to-wav.dlq"
-audio_processing_stream_name = "AUDIO_PROCESSING"
-audio_processing_consumer_name = "pcm-to-wav-workers"
-wav_created_subject = "wav.created"
-wav_object_store_bucket = "WAV_FILES"
 
-[pcm_to_wav_service.sox]
+[pcm-to-wav-service.nats]
+    streams = [
+      { name = "AUDIO_PROCESSING", subjects = ["audio.chunk.created"] },
+      { name = "WAV_FILES", subjects = ["wav.created"] }
+    ]
+    consumers = [
+      { stream_name = "AUDIO_PROCESSING", consumer_name = "pcm-to-wav-workers", filter_subject = "audio.chunk.created" }
+    ]
+    object_stores = [
+      { bucket_name = "AUDIO_FILES" },
+      { bucket_name = "WAV_FILES" }
+    ]
+
+[pcm-to-wav-service.sox]
 encoding = "signed-integer"
-bits = 16
+bits = 32
 rate = 24000
 channels = 1
 input_type = "raw"
