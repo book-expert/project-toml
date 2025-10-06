@@ -191,6 +191,7 @@ input_type = "raw"
 output_type = "wav"
 
 [pcm-to-wav-service.nats]
+    url = "nats://127.0.0.1:4222"
     streams = [
       { name = "WAV_CREATED", subjects = ["wav.created"] }
     ]
