@@ -179,8 +179,16 @@ dead_letter_subject = "book-expert.tts.dlq"
 # PCM TO WAV SERVICE
 # ========================================================================
 
-[pcm-to-wav-service]
+[pcm_to_wav_service]
 dead_letter_subject = "book-expert.pcm-to-wav.dlq"
+
+[pcm_to_wav_service.sox]
+encoding = "signed-integer"
+bits = 32
+rate = 24000
+channels = 1
+input_type = "raw"
+output_type = "wav"
 
 [pcm-to-wav-service.nats]
     url = "nats://127.0.0.1:4222"
