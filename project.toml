@@ -1,6 +1,5 @@
 # ========================================================================
-# GLOBAL PROJECT CONFIGURATION
-# This file serves as the single source of truth for all microservices.
+# GLOBAL CONFIGURATION
 # ========================================================================
 
 [project]
@@ -11,9 +10,16 @@ description = "A system for processing documents from PDF to text and speech, wi
 [paths]
 base_logs_dir = "/tmp/logs"
 
+[nats]
+url = "nats://127.0.0.1:4222"
+
+[database]
+user_database_dsn = "postgres://book_expert_user:b00k_3xp3rt@localhost:5432/book_expert_db"
+
 # ========================================================================
-# BOOK-EXPERT-SERVICE SPECIFIC CONFIGURATION
+# BOOK EXPERT SERVICE (Main Orchestrator)
 # ========================================================================
+
 [book_expert_service]
 log_directory = "/tmp/logs"
 log_filename = "book-expert-service.log"
@@ -23,12 +29,46 @@ required_units = [
     "user-database.service"
 ]
 
-[database]
-user_database_dsn = "postgres://book_expert_user:b00k_3xp3rt@localhost:5432/book_expert_db"
+# ========================================================================
+# COST ESTIMATOR SERVICE
+# ========================================================================
 
-[ui_service]
-http_address = ":8080"
-max_upload_megabytes = 64
+[cost_estimator_service]
+currency = "USD"
+page_block_size = 100
+base_rate_cents_per_block = 200
+default_augmentation_cents_per_block = 50
+custom_commentary_cents_per_block = 100
+custom_summary_cents_per_block = 100
+maximum_prompt_characters = 500
+
+# ========================================================================
+# PDF TO PNG SERVICE
+# ========================================================================
+
+[pdf_to_png_service]
+dead_letter_subject = "book-expert.pdf-to-png.dlq"
+
+[pdf-to-png-service.nats]
+    streams = [
+      { name = "pdfs", subjects = ["book-expert.pdfs.created"] },
+      { name = "pngs", subjects = ["book-expert.pngs.created"] },
+      { name = "dlq", subjects = ["book-expert.pdf-to-png.dlq"] }
+    ]
+    consumers = [
+      { stream_name = "pdfs", consumer_name = "pdf-to-png-consumer", filter_subject = "book-expert.pdfs.created" }
+    ]
+    object_stores = [
+      { bucket_name = "pdf-files" },
+      { bucket_name = "png-files" }
+    ]
+
+# ========================================================================
+# PNG TO TEXT SERVICE
+# ========================================================================
+
+[png_to_text_service]
+dead_letter_subject = "book-expert.png-to-text.dlq"
 
 [png_to_text_service.prompts]
 commentary_base = """
@@ -91,12 +131,23 @@ top_p = 0.95
 repetition_penalty = 1.1
 temperature = 0.70
 
-[png_to_text_service]
-dead_letter_subject = "book-expert.png-to-text.dlq"
+[png-to-text-service.nats]
+    streams = [
+      { name = "pngs", subjects = ["book-expert.pngs.created"] },
+      { name = "texts", subjects = ["book-expert.texts.created"] }
+    ]
+    consumers = [
+      { stream_name = "pngs", consumer_name = "png-to-text-consumer", filter_subject = "book-expert.pngs.created" }
+    ]
+    object_stores = [
+      { bucket_name = "png-files" },
+      { bucket_name = "text-files" }
+    ]
 
 # ========================================================================
-# TTS-SERVICE SPECIFIC CONFIGURATION
+# TTS SERVICE
 # ========================================================================
+
 [tts_service]
 model_path = "${TTS_MODEL_PATH}"
 snac_model_path = "${SNAC_MODEL_PATH}"
@@ -110,34 +161,30 @@ timeout_seconds = 300
 allowed_voices = ["default", "tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
 dead_letter_subject = "book-expert.tts.dlq"
 
-  [tts_service.nats]
-    url = "nats://127.0.0.1:4222" # Using the global NATS URL
-
-    [[tts_service.nats.streams]]
-      name = "TTS_JOBS"
-      subjects = ["text.processed"]
-
-    [[tts_service.nats.streams]]
-      name = "AUDIO_OUTPUT"
-      subjects = ["audio.chunk.created"]
-
-    [[tts_service.nats.streams]]
-      name = "DLQ"
-      subjects = ["book-expert.tts.dlq"]
-
-    [[tts_service.nats.consumers]]
-      stream_name = "TTS_JOBS"
-      consumer_name = "tts-workers"
-      filter_subject = "text.processed"
-
-    [[tts_service.nats.object_stores]]
-      bucket_name = "AUDIO_FILES"
+[tts-service.nats]
+    url = "nats://127.0.0.1:4222"
+    streams = [
+      { name = "TTS_JOBS", subjects = ["text.processed"] },
+      { name = "AUDIO_OUTPUT", subjects = ["audio.chunk.created"] },
+      { name = "DLQ", subjects = ["book-expert.tts.dlq"] }
+    ]
+    consumers = [
+      { stream_name = "TTS_JOBS", consumer_name = "tts-workers", filter_subject = "text.processed" }
+    ]
+    object_stores = [
+      { bucket_name = "AUDIO_FILES" }
+    ]
 
 # ========================================================================
-# PCM-TO-WAV-SERVICE SPECIFIC CONFIGURATION
+# PCM TO WAV SERVICE
 # ========================================================================
+
 [pcm_to_wav_service]
 dead_letter_subject = "book-expert.pcm-to-wav.dlq"
+audio_processing_stream_name = "AUDIO_PROCESSING"
+audio_processing_consumer_name = "pcm-to-wav-workers"
+wav_created_subject = "wav.created"
+wav_object_store_bucket = "WAV_FILES"
 
 [pcm_to_wav_service.sox]
 encoding = "signed-integer"
@@ -148,72 +195,16 @@ input_type = "raw"
 output_type = "wav"
 
 # ========================================================================
-# WAV-AGGREGATOR-SERVICE SPECIFIC CONFIGURATION
+# WAV AGGREGATOR SERVICE
 # ========================================================================
+
 [wav_aggregator_service]
 worker_pool_size = 10
 dead_letter_subject = "book-expert.wav-aggregator.dlq"
-
-# ========================================================================
-# USER-DATABASE-SERVICE SPECIFIC CONFIGURATION
-# ========================================================================
-[user_database_service]
-base_url = "http://localhost:8085"
-listen_address = "0.0.0.0:8085"
-jwt_issuer = "book-expert-user-db"
-jwt_audience = "book-expert"
-access_token_ttl_minutes = 15
-refresh_token_ttl_hours = 720
-argon2_memory_kib = 19456
-argon2_iterations = 3
-argon2_parallelism = 1
-
-# ========================================================================
-# CONFIGURATOR SERVICE SPECIFIC CONFIGURATION
-# (No specific configuration needed for configurator itself, it's a library)
-# ========================================================================
-
-[cost_estimator_service]
-currency = "USD"
-page_block_size = 100
-base_rate_cents_per_block = 200
-default_augmentation_cents_per_block = 50
-custom_commentary_cents_per_block = 100
-custom_summary_cents_per_block = 100
-maximum_prompt_characters = 500
-
-[nats]
-url = "nats://127.0.0.1:4222"
-
-[pdf-to-png-service.nats]
-    streams = [
-      { name = "pdfs", subjects = ["book-expert.pdfs.created"] },
-      { name = "pngs", subjects = ["book-expert.pngs.created"] },
-      { name = "dlq", subjects = ["book-expert.pdf-to-png.dlq"] }
-    ]
-    consumers = [
-      { stream_name = "pdfs", consumer_name = "pdf-to-png-consumer", filter_subject = "book-expert.pdfs.created" }
-    ]
-    object_stores = [
-      { bucket_name = "pdf-files" },
-      { bucket_name = "png-files" }
-    ]
-
-[pdf_to_png_service]
-dead_letter_subject = "book-expert.pdf-to-png.dlq"
-
-[png-to-text-service.nats]
-    streams = [
-      { name = "pngs", subjects = ["book-expert.pngs.created"] },
-      { name = "texts", subjects = ["book-expert.texts.created"] }
-    ]
-    consumers = [
-      { stream_name = "pngs", consumer_name = "png-to-text-consumer", filter_subject = "book-expert.pngs.created" }
-    ]
-    object_stores = [
-      { bucket_name = "png-files" },
-      { bucket_name = "text-files" }
-    ]
+final_audio_created_subject = "final.audio.created"
+final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
+wav_consumer_name = "wav-aggregator-workers"
+wav_aggregator_kv_bucket = "WAV_AGGREGATOR_STATE"
 
 [wav-aggregator-service.nats]
     streams = [
@@ -230,23 +221,26 @@ dead_letter_subject = "book-expert.pdf-to-png.dlq"
     ]
     key_value = { bucket_name = "WAV_AGGREGATOR_STATE" }
 
+# ========================================================================
+# UI SERVICE
+# ========================================================================
 
-# ------------------------------------------------------------------------
-# PCM TO WAV SERVICE
-# Consumes: Audio chunks (PCM)
-# Produces: WAV files
-# ------------------------------------------------------------------------
-audio_processing_stream_name = "AUDIO_PROCESSING"
-audio_processing_consumer_name = "pcm-to-wav-workers"
-wav_created_subject = "wav.created"
-wav_object_store_bucket = "WAV_FILES"
+[ui_service]
+http_address = ":8080"
+max_upload_megabytes = 64
 
-# ------------------------------------------------------------------------
-# WAV AGGREGATOR SERVICE
-# Consumes: WAV files
-# Produces: Final aggregated audio
-# ------------------------------------------------------------------------
-final_audio_created_subject = "final.audio.created"
-final_audio_object_store_bucket = "FINAL_AUDIO_FILES"
-wav_consumer_name = "wav-aggregator-workers"
-wav_aggregator_kv_bucket = "WAV_AGGREGATOR_STATE"
+# ========================================================================
+# USER DATABASE SERVICE
+# ========================================================================
+
+[user_database_service]
+base_url = "http://localhost:8085"
+listen_address = "0.0.0.0:8085"
+jwt_issuer = "book-expert-user-db"
+jwt_audience = "book-expert"
+access_token_ttl_minutes = 15
+refresh_token_ttl_hours = 720
+argon2_memory_kib = 19456
+argon2_iterations = 3
+argon2_parallelism = 1
+
