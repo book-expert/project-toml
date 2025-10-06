@@ -191,10 +191,8 @@ input_type = "raw"
 output_type = "wav"
 
 [pcm-to-wav-service.nats]
-    url = "nats://127.0.0.1:4222"
-
     streams = [
-      { name = "WAV_FILES", subjects = ["wav.created"] }
+      { name = "WAV_CREATED", subjects = ["wav.created"] }
     ]
     consumers = [
       { stream_name = "AUDIO_PROCESSING", consumer_name = "pcm-to-wav-workers", filter_subject = "audio.chunk.created" }
