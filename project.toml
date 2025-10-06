@@ -184,7 +184,6 @@ dead_letter_subject = "book-expert.pcm-to-wav.dlq"
 
 [pcm-to-wav-service.nats]
     streams = [
-      { name = "AUDIO_PROCESSING", subjects = ["audio.chunk.created"] },
       { name = "WAV_FILES", subjects = ["wav.created"] }
     ]
     consumers = [
