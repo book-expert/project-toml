@@ -164,12 +164,12 @@ dead_letter_subject = "book-expert.tts.dlq"
 [tts-service.nats]
     url = "nats://127.0.0.1:4222"
     streams = [
-      { name = "TTS_JOBS", subjects = ["text.processed"] },
+      { name = "TTS_JOBS", subjects = ["book-expert.texts.created"] },
       { name = "AUDIO_OUTPUT", subjects = ["audio.chunk.created"] },
       { name = "DLQ", subjects = ["book-expert.tts.dlq"] }
     ]
     consumers = [
-      { stream_name = "TTS_JOBS", consumer_name = "tts-workers", filter_subject = "text.processed" }
+      { stream_name = "TTS_JOBS", consumer_name = "tts-workers", filter_subject = "book-expert.texts.created" }
     ]
     object_stores = [
       { bucket_name = "AUDIO_FILES" }
